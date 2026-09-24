@@ -1,0 +1,6 @@
+{
+  "name": "The Harness",
+  "description": "A clean, multi-model AI chat app with web search, document RAG, and email capabilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
