@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
@@ -677,17 +678,22 @@ app.post('/api/ask', async (req: Request, res: Response) => {
 });
 
 async function startServer() {
-  if (!isProd) {
+  const distDir = path.resolve(process.cwd(), 'dist');
+  const indexHtmlPath = path.resolve(distDir, 'index.html');
+
+  if (isProd && fs.existsSync(indexHtmlPath)) {
+    app.use(express.static(distDir));
+    app.get('*', (_req, res) => {
+      res.sendFile(indexHtmlPath);
+    });
+  } else {
+    // If not in production or dist hasn't been built yet, mount Vite middleware so the app always renders
+    console.log(`[Server] ${isProd ? 'dist/index.html not found, mounting Vite middleware fallback' : 'Running in dev mode'}`);
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.resolve(process.cwd(), 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
-    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
